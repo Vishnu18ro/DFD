@@ -14,6 +14,28 @@
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
 
+    <canvas id="particles"></canvas>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-nav">
+        <div class="nav-logo">Deep Fake Detection</div>
+        <button id="examples-btn" class="nav-btn">Recommendation</button>
+    </nav>
+
+    <!-- Modal for Examples -->
+    <div id="example-modal" class="modal-overlay hidden">
+        <div class="modal-glass">
+            <button class="modal-close">&times;</button>
+            <h3>Try an Example</h3>
+            <div class="gallery-grid">
+                <img src="{{ url_for('static', filename='examples/sample1.webp') }}" class="gallery-img"
+                    onclick="loadExample(this.src)" alt="Sample 1">
+                <img src="{{ url_for('static', filename='examples/sample2.png') }}" class="gallery-img"
+                    onclick="loadExample(this.src)" alt="Sample 2">
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1>AI Or Real?</h1>
