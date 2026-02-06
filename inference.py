@@ -42,26 +42,21 @@ inference_transforms = transforms.Compose([
 ])
 
 def predict_image(model, image_path):
-    try:
-        image = Image.open(image_path).convert("RGB")
-        input_tensor = inference_transforms(image).unsqueeze(0).to(DEVICE) # Add batch dimension
+    image = Image.open(image_path).convert("RGB")
+    input_tensor = inference_transforms(image).unsqueeze(0).to(DEVICE) # Add batch dimension
+    
+    with torch.no_grad():
+        outputs = model(input_tensor)
+        probabilities = torch.nn.functional.softmax(outputs, dim=1)
+        confidence, predicted_class = torch.max(probabilities, 1)
         
-        with torch.no_grad():
-            outputs = model(input_tensor)
-            probabilities = torch.nn.functional.softmax(outputs, dim=1)
-            confidence, predicted_class = torch.max(probabilities, 1)
-            
-        # Class 0: Real, Class 1: AI (Based on alphabetical order in training or explicit mapping)
-        # Training script explicit mapping: 0=Real, 1=AI
-        
-        label = "AI-Generated" if predicted_class.item() == 1 else "Real Image"
-        score = confidence.item() * 100
-        
-        return label, score
-        
-    except Exception as e:
-        print(f"Error processing {image_path}: {e}")
-        return None, 0.0
+    # Class 0: Real, Class 1: AI (Based on alphabetical order in training or explicit mapping)
+    # Training script explicit mapping: 0=Real, 1=AI
+    
+    label = "AI-Generated" if predicted_class.item() == 1 else "Real Image"
+    score = confidence.item() * 100
+    
+    return label, score
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI Image Detector Inference")

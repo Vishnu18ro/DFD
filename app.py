@@ -28,23 +28,23 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
         
-    if file and allowed_file(file.filename):
-        # Save securely
-        filename = secure_filename(file.filename)
-        # Add random hex to avoid collisions
-        unique_name = f"{secrets.token_hex(8)}_{filename}"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
-        file.save(filepath)
+        file = request.files['file']
         
-        try:
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+            
+        if file and allowed_file(file.filename):
+            # Save securely
+            filename = secure_filename(file.filename)
+            # Add random hex to avoid collisions
+            unique_name = f"{secrets.token_hex(8)}_{filename}"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+            file.save(filepath)
+            
             # Predict
             label, score = predict_image(model, filepath)
             
@@ -56,9 +56,14 @@ def predict():
                 'score': score,
                 'filename': filename
             })
-            
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+                
+        return jsonify({'error': 'File type not allowed'}), 400
+
+    except Exception as e:
+        print(f"Error in predict route: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
             
     return jsonify({'error': 'File type not allowed'}), 400
 
