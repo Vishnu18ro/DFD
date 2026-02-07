@@ -26,6 +26,18 @@ def allowed_file(filename):
 def index():
     return render_template('index.html')
 
+@app.route('/recommendations')
+def recommendations():
+    # List images in static/recommendations
+    images_dir = os.path.join(app.static_folder, 'recommendations')
+    images = []
+    if os.path.exists(images_dir):
+        images = [f for f in os.listdir(images_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
+        # Sort or shuffle? Let's shuffle every time for variety
+        import random
+        random.shuffle(images)
+    return render_template('recommendations.html', images=images)
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:

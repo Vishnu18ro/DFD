@@ -187,39 +187,35 @@ function animateScore(target) {
     requestAnimationFrame(update);
 }
 
-// Modal Logic
-const modal = document.getElementById('example-modal');
-const btn = document.getElementById('examples-btn');
-const closeBtn = document.querySelector('.modal-close');
-
-btn.onclick = function () {
-    modal.classList.add('active');
-}
-
-closeBtn.onclick = function () {
-    modal.classList.remove('active');
-}
-
-window.onclick = function (event) {
-    if (event.target == modal) {
-        modal.classList.remove('active');
-    }
-}
+// Modal Logic Removed
 
 // Example Gallery Logic
 async function loadExample(url) {
     // Close modal if open
-    if (modal) modal.classList.remove('active');
+    // Modal removed
+
 
     try {
+        console.log("Fetching image from:", url);
         const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const blob = await response.blob();
+        console.log("Blob received:", blob);
 
         // Extract filename from URL
         const filename = url.split('/').pop();
 
         // Create file object
-        const file = new File([blob], filename, { type: blob.type });
+        // Use blob.type if available, otherwise guess based on extension, otherwise default to image/jpeg
+        let mimeType = blob.type;
+        if (!mimeType || mimeType === "") {
+            if (filename.toLowerCase().endsWith('.png')) mimeType = 'image/png';
+            else if (filename.toLowerCase().endsWith('.webp')) mimeType = 'image/webp';
+            else mimeType = 'image/jpeg';
+        }
+        const file = new File([blob], filename, { type: mimeType });
 
         // Reuse handleFiles logic
         handleFiles([file]);
@@ -320,3 +316,52 @@ function animateParticles() {
 
 initParticles();
 animateParticles();
+
+// Check for URL parameters (e.g., from recommendations page)
+window.addEventListener('DOMContentLoaded', async () => {
+    console.log("DOMContentLoaded: Checking for URL parameters...");
+    const urlParams = new URLSearchParams(window.location.search);
+    const imgParam = urlParams.get('img');
+
+    if (imgParam) {
+        console.log("Found img param:", imgParam);
+        // Construct full URL. imgParam is like "recommendations/real_foo.jpg"
+        const imageUrl = `/static/${imgParam}`;
+        console.log("Attempting to load:", imageUrl);
+
+        try {
+            // Wait for image to load
+            await loadExample(imageUrl);
+
+            // Check if file was loaded successfully
+            console.log("Image load complete. currentFile:", currentFile);
+
+            if (currentFile) {
+                console.log("Auto-analyzing loaded image...");
+                const analyzeBtn = document.getElementById('analyze-btn');
+                if (analyzeBtn) {
+                    console.log("Clicking analyze button...");
+                    analyzeBtn.disabled = false; // Force enable just in case
+                    // Add a small delay to ensure UI is ready
+                    setTimeout(() => {
+                        analyzeBtn.click();
+                    }, 500);
+                } else {
+                    console.error("Analyze button not found!");
+                }
+            } else {
+                console.error("currentFile is null after loadExample");
+                alert("Failed to load image from recommendation.");
+            }
+
+            // Clean up URL without reloading
+            window.history.replaceState({}, document.title, "/");
+
+        } catch (e) {
+            console.error("Error in auto-load sequence:", e);
+            alert("Error loading recommendation: " + e.message);
+        }
+    } else {
+        console.log("No img param found.");
+    }
+});
