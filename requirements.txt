@@ -3,3 +3,5 @@ torchvision
 pillow
 scikit-learn
 matplotlib
+flask
+gunicorn
